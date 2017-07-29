@@ -1,0 +1,35 @@
+
+  - name: upgrade all packages
+    yum:
+      name: '*'
+      state: latest
+      
+  - name: Enable docker
+    service:
+      name: docker
+      state: started
+      enabled: yes
+
+  - name: install kubeadm 
+    copy:
+      src: files/kubernetes.repo
+      dest: /etc/yum.repos.d/kubernetes.repo
+
+  - selinux:
+      policy: targeted
+      state: permissive
+
+  - name: Install kubelet and kubeadm
+    yum:
+      name: "{{ item }}"
+      state: latest
+    with_items:
+      - kubelet
+      - kubeadm
+
+  - name: Start kubelet
+    service:
+      name: kubelet
+      state: started
+      enabled: yes
+
