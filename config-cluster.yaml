@@ -4,5 +4,5 @@
     hosts: master
     become: true
     roles: 
-      - master
       - kubeadm
+      - master

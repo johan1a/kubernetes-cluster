@@ -7,3 +7,19 @@
     with_items:
       - "6443"
       - "10250"
+    register: ports
+
+  - name: Restart firewalld
+    service: firewalld
+    state: restarted
+    when: ports.changed
+
+  - name: Init kubeadm
+    command: kubeadm init
+    register: kubeadm_init
+
+  - debug:
+      msg: "{{kubeadm_init.stdout.split('\n') }}"
+  - debug:
+      msg: "{{ kubeadm_init.stderr.split('\n') }}"
+
