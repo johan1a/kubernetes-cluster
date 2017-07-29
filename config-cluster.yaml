@@ -1,0 +1,7 @@
+---
+
+  - name: Configurate cluster
+    hosts: master
+    become: true
+    roles: 
+      - master

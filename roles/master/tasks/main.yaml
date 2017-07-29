@@ -1,0 +1,9 @@
+
+  - name: Open ports
+    firewalld:
+      port: "{{ item }}/tcp"
+      permanent: true
+      state: enabled
+    with_items:
+      - "6443"
+      - "10250"
