@@ -8,15 +8,29 @@
       - "6443"
       - "10250"
     register: ports
+    when: not vagrant is defined
 
   - name: Restart firewalld
-    service: firewalld
-    state: restarted
+    service: 
+      name: firewalld
+      state: restarted
     when: ports.changed
+
+  - name: Check if kubeadm is initialized
+    stat:
+      path: /etc/kubeadm_init
+    register: kubeadm_init_stat
 
   - name: Init kubeadm
     command: kubeadm init
     register: kubeadm_init
+    when: not kubeadm_init_stat.stat.exists
+
+  - name: Set kubeadm init status file
+    file:  
+      content: true
+      dest: /etc/kubeadm_init
+    when: kubeadm_init.succeeded
 
   - debug:
       msg: "{{kubeadm_init.stdout.split('\n') }}"
