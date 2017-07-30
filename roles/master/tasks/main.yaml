@@ -11,29 +11,48 @@
     when: not vagrant is defined
 
   - name: Restart firewalld
-    service: 
+    service:
       name: firewalld
       state: restarted
     when: ports.changed
 
-  - name: Check if kubeadm is initialized
-    stat:
-      path: /etc/kubeadm_init
-    register: kubeadm_init_stat
-
-  - name: Init kubeadm
+  - name: Init kubeadm. This may take a few minutes.
     command: kubeadm init
+    when: kubeadm_install.changed
     register: kubeadm_init
-    when: not kubeadm_init_stat.stat.exists
+    failed_when: "'FAILED' in kubeadm_init.stderr"
 
-  - name: Set kubeadm init status file
-    file:  
-      content: true
-      dest: /etc/kubeadm_init
-    when: kubeadm_init.succeeded
+  - name: create .kube
+    file:
+      path: /home/{{ user_name }}/.kube
+      state: directory
+      owner: "{{ user_name }}"
+      group: "{{ user_name }}"
 
-  - debug:
-      msg: "{{kubeadm_init.stdout.split('\n') }}"
-  - debug:
-      msg: "{{ kubeadm_init.stderr.split('\n') }}"
+  - name: copy admin.conf
+    copy:
+      src: /etc/kubernetes/admin.conf
+      dest: /home/{{ user_name }}/.kube/config
+      remote_src: true
+      owner: "{{ user_name }}"
+      group: "{{ user_name }}"
+
+  - name: Export KUBECONFIG
+    command: echo export KUBECONFIG=/home/{{ user_name }}/.kube/config >> /home/{{ user_name }}/.bashrc
+    when: kubeadm_init.changed
+
+  - name: Source the bashrc file
+    shell: source ~/.bashrc
+    become: false
+
+  - name: Initialize network
+    command: kubectl apply -f https://git.io/weave-kube-1.6
+    when: kubeadm_init.changed
+    become: false
+    register: network
+
+  - name: Remove master taint
+    command: kubectl taint nodes --all node-role.kubernetes.io/master-
+    become: false
+    when: network.changed
 

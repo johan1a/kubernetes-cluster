@@ -1,7 +1,10 @@
 
+  - name: yum update
+    command: yum update -y
+
   - name: Upgrade packages
     yum:
-      name: '*'
+      name: "*"
       state: latest
 
   - name: Add kubernetes repo 
@@ -13,6 +16,13 @@
       policy: targeted
       state: permissive
 
+  # Latest kubeadm is broken
+  - name: Install kubeadm
+    yum:
+      name: kubeadm-1.6.7-0
+      state: present
+    register: kubeadm_install
+
   - name: Install packages
     yum:
       name: "{{ item }}"
@@ -20,13 +30,7 @@
     with_items:
       - docker
       - kubelet
-      - kubeadm
       - dnsmasq
-
-  - name: Install kubeadm
-    yum:
-      name: kubeadm-1.6.7-0
-      state: present
 
   - name: Start and enable services
     service:
@@ -36,9 +40,29 @@
     with_items:
       - docker
       - kubelet
+      - dnsmasq
 
   - name: Vagrant workaround
-    file:
-      content: "1"
-      dest: /proc/sys/net/bridge/bridge-nf-call-iptables
+    copy:
+      src: files/resolv.conf.vagrant
+      dest: /etc/resolv.conf
+      mode: 0444
+      #command: chattr +i /etc/resolv.conf
     when: vagrant is defined
+
+  - name: Vagrant workaround
+    copy:
+      src: files/dnsmasq.conf.vagrant
+      dest: /etc/dnsmasq.conf
+    when: vagrant is defined
+
+  - name: restart dnsmasq
+    service:
+      name: dnsmasq
+      state: restarted
+    when: vagrant is defined
+
+  - name: set bridge-nf-call-iptables to 1
+    command: sysctl net.bridge.bridge-nf-call-iptables=1
+    when: vagrant is defined
+    become: true
