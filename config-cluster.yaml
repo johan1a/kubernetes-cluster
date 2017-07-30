@@ -1,8 +1,14 @@
 ---
 
-  - name: Configurate cluster
+  - name: Configurate master
     hosts: master
     become: true
     roles: 
       - kubeadm
       - master
+
+  - name: Configurate worker
+    hosts: worker
+    become: true
+    roles: 
+      - kubeadm

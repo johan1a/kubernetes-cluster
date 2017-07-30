@@ -37,9 +37,11 @@
       owner: "{{ user_name }}"
       group: "{{ user_name }}"
 
-  - name: Export KUBECONFIG
-    command: echo export KUBECONFIG=/home/{{ user_name }}/.kube/config >> /home/{{ user_name }}/.bashrc
-    when: kubeadm_init.changed
+  - name: set KUBECONFIG
+    lineinfile:
+      path: /home/{{ user_name }}/.bashrc
+      regexp: '^KUBECONFIG='
+      line: 'KUBECONFIG=/home/{{ user_name }}/.kube/config'
 
   - name: Source the bashrc file
     shell: source ~/.bashrc

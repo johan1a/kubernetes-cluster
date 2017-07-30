@@ -12,6 +12,9 @@
       src: files/kubernetes.repo
       dest: /etc/yum.repos.d/kubernetes.repo
 
+  - name: yum update
+    command: yum update -y
+
   - selinux:
       policy: targeted
       state: permissive
@@ -42,9 +45,17 @@
       - kubelet
       - dnsmasq
 
+  - name: get ip
+    command: hostname -i
+    register: hostname_ip
+    when: vagrant is defined
+
+  - set_fact:
+      ip_addr: "{{ hostname_ip.stdout }}"
+
   - name: Vagrant workaround
-    copy:
-      src: files/resolv.conf.vagrant
+    template:
+      src: resolv.conf.vagrant
       dest: /etc/resolv.conf
       mode: 0444
       #command: chattr +i /etc/resolv.conf

@@ -6,20 +6,28 @@
 # backwards compatibility). Please don't change it unless you know what
 # you're doing.
 Vagrant.configure(2) do |config|
-  config.vm.box = "centos/7"
 
-  config.vm.hostname = "k8s1"
-  node_ip = "192.168.50.10"
 
-  config.vm.network "private_network", ip: node_ip
-  config.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/me.pub"
-  config.vm.provision "shell", inline: "cat ~vagrant/.ssh/me.pub >> ~vagrant/.ssh/authorized_keys"
-  config.vm.provision "shell", inline: "echo 'vagrant:vagrant' | chpasswd"
-  config.vm.provision "shell", inline: "sed 's/127\.0\.0\.1.*k8s.*/192\.168\.50\.10 k8s1/' -i /etc/hosts"
+  (0..2).each do |i|
+    config.vm.define "k8s#{i}" do |k|
 
-  config.vm.provider "virtualbox" do |v|
-    v.name = "k8s1"
-    v.memory = 2048
-    v.gui = false
+      k.vm.box = "centos/7"
+
+      hostname = "k8s#{i}"
+      k.vm.hostname = hostname
+      node_ip = "192.168.50.#{10 + i}"
+
+      k.vm.network "private_network", ip: node_ip
+      k.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/me.pub"
+      k.vm.provision "shell", inline: "cat ~vagrant/.ssh/me.pub >> ~vagrant/.ssh/authorized_keys"
+      k.vm.provision "shell", inline: "echo 'vagrant:vagrant' | chpasswd"
+      k.vm.provision "shell", inline: "sed 's/127\.0\.0\.1.*k8s.*/192\.168\.50\.#{10 + i} #{hostname}/' -i /etc/hosts"
+
+      k.vm.provider "virtualbox" do |v|
+        v.name = hostname
+        v.memory = 2048
+        v.gui = false
+      end
+    end
   end
 end
