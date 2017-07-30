@@ -17,7 +17,7 @@
     when: ports.changed
 
   - name: Init kubeadm. This may take a few minutes.
-    command: kubeadm init
+    command: kubeadm init --apiserver-advertise-address 192.168.50.10
     when: kubeadm_install.changed
     register: kubeadm_init
     failed_when: "'FAILED' in kubeadm_init.stderr"
