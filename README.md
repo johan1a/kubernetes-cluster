@@ -5,7 +5,7 @@
 
 vagrant up
 
-ansible-playbook -K config-cluster.yaml -i test_hosts.ini -u vagrant
+./vagrant_ansible.sh
 
 # If vagrant ssh doesn't work
 

@@ -48,7 +48,7 @@
     become: false
 
   - name: Initialize network
-    command: kubectl apply -f https://git.io/weave-kube-1.6
+    script: files/init_network.sh
     when: kubeadm_init.changed
     become: false
     register: network
